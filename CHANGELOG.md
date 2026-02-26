@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1](https://github.com/BeefreeSDK/angular-email-builder/compare/v1.1.0...v1.1.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* update README.md and local build files ([6a8c346](https://github.com/BeefreeSDK/angular-email-builder/commit/6a8c346e93d4ce6191e9be25f9bbdab1e3406899))
+
 ## 1.1.0 (2026-02-26)
 
 
