@@ -9,7 +9,7 @@
     "noImplicitReturns": true,
     "paths": {
       "@beefree.io/angular-email-builder": [
-        "./dist/angular-email-builder"
+        "./projects/angular-email-builder/src/public-api.ts"
       ]
     },
     "noFallthroughCasesInSwitch": true,
