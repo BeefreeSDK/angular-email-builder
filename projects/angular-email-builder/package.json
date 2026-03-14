@@ -40,15 +40,16 @@
   },
   "peerDependencies": {
     "@angular/common": "^20.0.0",
-    "@angular/core": "^20.0.0",
-    "@beefree.io/sdk": "^11.2.1"
+    "@angular/core": "^20.0.0"
   },
   "dependencies": {
+    "@beefree.io/sdk": "^11.2.1",
     "tslib": "^2.3.0"
   },
   "sideEffects": false,
   "files": [
-    "dist",
+    "fesm2022",
+    "index.d.ts",
     "README.md",
     "LICENSE"
   ],

@@ -7,7 +7,7 @@
     "start": "ng serve",
     "clean": "rimraf dist",
     "prebuild": "yarn clean",
-    "build": "ng build angular-email-builder",
+    "build": "ng build angular-email-builder && cp LICENSE dist/angular-email-builder/",
     "watch": "ng build angular-email-builder --watch --configuration development",
     "lint": "ng lint",
     "test": "ng test angular-email-builder",

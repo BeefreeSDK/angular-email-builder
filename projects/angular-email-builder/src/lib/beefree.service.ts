@@ -145,6 +145,12 @@ export class BeefreeService {
     return this.getActiveSDK().loadConfig(args, options)
   }
 
+  loadConfigAll(args: ILoadConfig, options?: LoadConfigOptions): Promise<IBeeConfig[]> {
+    return Promise.all(
+      Array.from(this.instances.values()).map(({ bee }) => bee.loadConfig(args, options))
+    )
+  }
+
   updateConfig(partialConfig: ILoadConfig, options?: LoadConfigOptions): Promise<IBeeConfig> {
     return this.getActiveSDK().loadConfig(partialConfig, options)
   }
