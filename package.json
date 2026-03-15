@@ -16,7 +16,7 @@
     "coverage": "ng test angular-email-builder --coverage",
     "coverage:example": "ng test angular-email-builder-example --coverage",
     "prerelease": "git pull && yarn prebuild && yarn test:ci && yarn build",
-    "release": "standard-version && yarn postrelease",
+    "release": "standard-version",
     "postrelease": "git push --follow-tags --no-verify",
     "release:alpha": "yarn prerelease && standard-version --prerelease alpha && yarn postrelease",
     "release:beta": "yarn prerelease && standard-version --prerelease beta && yarn postrelease",
