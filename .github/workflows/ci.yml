@@ -14,13 +14,19 @@ permissions:
   actions: write
   checks: write
   contents: read
+  deployments: read
+  issues: read
+  packages: read
   pull-requests: write
+  repository-projects: read
+  security-events: read
+  statuses: read
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Enable Corepack
         run: corepack enable
@@ -34,7 +40,7 @@ jobs:
       - name: Install Dependencies
         run: yarn --immutable
 
-      - name: Lint
+      - name: Run ESLint
         run: yarn lint
 
   test:
@@ -44,7 +50,7 @@ jobs:
       matrix:
         node-version: [20.x, 22.x]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Enable Corepack
         run: corepack enable
@@ -55,17 +61,29 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
+      - uses: actions/cache@v4.2.2
+        name: Cache node_modules
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ matrix.node-version }}-nodemodules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.node-version }}-nodemodules-
+
       - name: Install Dependencies
         run: yarn --immutable
 
-      - name: Run Tests
+      - name: Library Tests
         run: yarn test
+
+      - name: Example App Tests
+        run: yarn test:example
 
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Enable Corepack
         run: corepack enable
@@ -76,11 +94,36 @@ jobs:
           node-version: '22.x'
           cache: 'yarn'
 
+      - uses: actions/cache@v4.2.2
+        name: Cache node_modules
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-22.x-nodemodules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-22.x-nodemodules-
+
       - name: Install Dependencies
         run: yarn --immutable
 
       - name: Build Library
         run: yarn build
+
+      - name: Verify package contents
+        run: |
+          echo "=== dist contents ==="
+          ls -la dist/angular-email-builder/
+          echo "=== package.json ==="
+          cat dist/angular-email-builder/package.json
+          echo ""
+          echo "=== fesm2022 bundle ==="
+          ls -la dist/angular-email-builder/fesm2022/
+          echo "=== type definitions ==="
+          test -f dist/angular-email-builder/index.d.ts && echo "index.d.ts OK" || (echo "index.d.ts MISSING" && exit 1)
+          echo "=== LICENSE ==="
+          test -f dist/angular-email-builder/LICENSE && echo "LICENSE OK" || (echo "LICENSE MISSING" && exit 1)
+          echo "=== README ==="
+          test -f dist/angular-email-builder/README.md && echo "README.md OK" || (echo "README.md MISSING" && exit 1)
 
   release:
     runs-on: ubuntu-latest
@@ -89,7 +132,7 @@ jobs:
     environment:
       name: release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Enable Corepack
         run: corepack enable
@@ -99,6 +142,7 @@ jobs:
         with:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
+          scope: '@beefree.io'
           cache: 'yarn'
 
       - name: Install Dependencies

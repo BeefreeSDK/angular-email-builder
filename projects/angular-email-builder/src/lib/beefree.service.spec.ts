@@ -237,6 +237,16 @@ describe('BeefreeService', () => {
     expect(bee.loadConfig).toHaveBeenCalledWith({ language: 'it-IT' }, undefined)
   })
 
+  it('should call loadConfig on all instances with loadConfigAll', async () => {
+    const bee1 = createMockBee()
+    const bee2 = createMockBee()
+    service.registerInstance('c1', bee1)
+    service.registerInstance('c2', bee2)
+    await service.loadConfigAll({ language: 'de-DE' })
+    expect(bee1.loadConfig).toHaveBeenCalledWith({ language: 'de-DE' }, undefined)
+    expect(bee2.loadConfig).toHaveBeenCalledWith({ language: 'de-DE' }, undefined)
+  })
+
   it('should delegate updateConfig (alias for loadConfig)', async () => {
     const bee = createMockBee()
     service.registerInstance('c1', bee)

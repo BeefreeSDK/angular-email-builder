@@ -1,4 +1,34 @@
 {
+  "app": {
+    "builderLabel": "Builder:",
+    "languageLabel": "Jezik:",
+    "coEditing": "Sourejanje",
+    "builderTypes": {
+      "emailBuilder": "Urejevalnik e-pošte",
+      "pageBuilder": "Urejevalnik strani",
+      "popupBuilder": "Urejevalnik pojavnih oken",
+      "fileManager": "Upravljalnik datotek"
+    },
+    "welcomeTitle": "Čestitamo!",
+    "welcomeMessage": "Vaša Angular aplikacija z Beefree SDK je zagnana."
+  },
+  "example": {
+    "loading": "Nalaganje {type}...",
+    "retry": "Poskusi znova",
+    "preview": "Predogled",
+    "save": "Shrani",
+    "saveAsTemplate": "Shrani kot predlogo",
+    "loadSampleTemplate": "Naloži vzorčno predlogo",
+    "loadBlankTemplate": "Naloži prazno predlogo",
+    "joiningSession": "Pridruževanje seji...",
+    "resizePanels": "Spremeni velikost plošč",
+    "checkConsole": "Za podrobnosti preverite konzolo.",
+    "templateSent": "Predloga poslana",
+    "coEditingPlanError": "Sourejanje je na voljo le v načrtih Superpowers ali Enterprise.",
+    "error": "Napaka",
+    "loadFailed": "{type} ni bilo mogoče naložiti. Prosimo, poskusite znova.",
+    "loadFailedTitle": "Nalaganje ni uspelo"
+  },
   "credentials": {
     "title": "Neveljavni ali manjkajoči prijavni podatki",
     "description": "Preverjanje pristnosti za {type} ni uspelo. Preverite {clientId} in {clientSecret} v {envFile}.",
@@ -6,6 +36,7 @@
     "step2": "Kopirajte Client ID in Client Secret v datoteko environment.ts.",
     "step3": "Znova naložite to stran ali kliknite Poskusi znova.",
     "docs": "Glejte",
-    "retry": "Poskusi znova"
+    "retry": "Poskusi znova",
+    "gettingStartedGuide": "priročnik za začetek"
   }
 }

@@ -1,6 +1,9 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/angular-email-builder",
+  "allowedNonPeerDependencies": [
+    "@beefree.io/sdk"
+  ],
   "lib": {
     "entryFile": "src/public-api.ts"
   }

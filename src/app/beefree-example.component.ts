@@ -64,11 +64,11 @@ interface TextSegment {
           <button (click)="refreshToken()">{{ i18n().retry }}</button>
         </div>
       } @else if (isLoadingToken()) {
-        <div class="loading">Loading {{ builderType }}...</div>
+        <div class="loading">{{ exampleStrings().loading.replace('{type}', builderType) }}</div>
       } @else if (tokenError()) {
         <div class="error">
           <p>{{ tokenError() }}</p>
-          <button (click)="refreshToken()">Retry</button>
+          <button (click)="refreshToken()">{{ exampleStrings().retry }}</button>
         </div>
       } @else if (beefreeToken()) {
         <div class="builders-area" #buildersArea [class.co-editing]="isShared()">
@@ -97,7 +97,7 @@ interface TextSegment {
               [attr.aria-valuenow]="splitPosition()"
               [attr.aria-valuemin]="25"
               [attr.aria-valuemax]="75"
-              aria-label="Resize panels"
+              aria-label="{{ exampleStrings().resizePanels }}"
               tabindex="0"
               (mousedown)="onDividerMouseDown($event)"
               (keydown)="onDividerKeyDown($event)">
@@ -119,7 +119,7 @@ interface TextSegment {
                   [shared]="true"
                   [sessionId]="sessionId()" />
               } @else {
-                <div class="loading">Joining session...</div>
+                <div class="loading">{{ exampleStrings().joiningSession }}</div>
               }
             </div>
           }
@@ -130,13 +130,12 @@ interface TextSegment {
     <ng-template #instanceControls let-container="container">
       <div class="controls">
         <div class="button-group">
-          <button (click)="setActiveInstance(container); togglePreview()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">Preview</button>
-          <button (click)="setActiveInstance(container); save()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">Save</button>
-          <button (click)="setActiveInstance(container); saveAsTemplate()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">Save as Template</button>
+          <button (click)="setActiveInstance(container); togglePreview()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">{{ exampleStrings().preview }}</button>
+          <button (click)="setActiveInstance(container); save()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">{{ exampleStrings().save }}</button>
+          <button (click)="setActiveInstance(container); saveAsTemplate()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">{{ exampleStrings().saveAsTemplate }}</button>
           @if (!isShared()) {
-            <button (click)="setActiveInstance(container); loadSampleTemplate()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">Load Sample Template</button>
+            <button (click)="setActiveInstance(container); onLoadTemplateButton()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">{{ loadTemplateButtonLabel() }}</button>
           }
-          <button (click)="setActiveInstance(container); exportTemplateJson()" [disabled]="!builderReady() || isExecuting() || builderType === 'fileManager'">Export JSON</button>
         </div>
       </div>
     </ng-template>
@@ -228,6 +227,18 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
   };
 
   i18n = computed(() => (this.i18nMap[this.selectedBuilderLanguage()] ?? i18nEnUS).credentials);
+  appStrings = computed(() => {
+    const app = (this.i18nMap[this.selectedBuilderLanguage()] ?? i18nEnUS).app;
+    return { ...app, builderTypes: app.builderTypes as Record<string, string> };
+  });
+  exampleStrings = computed(() => (this.i18nMap[this.selectedBuilderLanguage()] ?? i18nEnUS).example);
+
+  loadedTemplate = signal<'sample' | 'blank' | null>(null);
+  loadTemplateButtonLabel = computed(() =>
+    this.loadedTemplate() === 'sample'
+      ? this.exampleStrings().loadBlankTemplate
+      : this.exampleStrings().loadSampleTemplate
+  );
 
   descriptionSegments = computed<TextSegment[]>(() => {
     const raw = this.i18n().description;
@@ -259,13 +270,13 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
     userHandle: 'user1',
     templateLanguage: this.defaultContentLanguage,
     templateLanguages: this.additionalContentLanguages,
-    onSave: (_pageJson: string, _pageHtml: string, _ampHtml: string | null, _templateVersion: number, _language: string | null) => {
-      console.log('onSave called:', { _pageJson, _pageHtml, _ampHtml, _templateVersion, _language });
-      this.onNotify?.('Check console for details.', 'success', 'Design saved');
+    onSave: (_pageJson: string, pageHtml: string) => {
+      this.downloadFile(`design-${Date.now()}.html`, pageHtml, 'text/html;charset=utf-8');
     },
-    onSaveAsTemplate: (_pageJson: string, _templateVersion: number) => {
-      console.log('onSaveAsTemplate called:', { _pageJson, _templateVersion });
-      this.onNotify?.('Check console for details.', 'success', 'Design saved as template');
+    onSaveAsTemplate: (pageJson: string) => {
+      const parsed = typeof pageJson === 'string' ? JSON.parse(pageJson) : pageJson;
+      const content = JSON.stringify(parsed, null, 2);
+      this.downloadFile(`template-${Date.now()}.json`, content, 'application/json');
     },
     onSend: (htmlFile: string) => {
       console.log('onSend called:', htmlFile);
@@ -283,13 +294,13 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
     userHandle: 'user2',
     templateLanguage: this.defaultContentLanguage,
     templateLanguages: this.additionalContentLanguages,
-    onSave: (_pageJson: string, _pageHtml: string, _ampHtml: string | null, _templateVersion: number, _language: string | null) => {
-      console.log('onSave (User 2) called:', { _pageJson, _pageHtml, _ampHtml, _templateVersion, _language });
-      this.onNotify?.('Check console for details.', 'success', 'Design saved');
+    onSave: (_pageJson: string, pageHtml: string) => {
+      this.downloadFile(`design-${Date.now()}.html`, pageHtml, 'text/html;charset=utf-8');
     },
-    onSaveAsTemplate: (_pageJson: string, _templateVersion: number) => {
-      console.log('onSaveAsTemplate (User 2) called:', { _pageJson, _templateVersion });
-      this.onNotify?.('Check console for details.', 'success', 'Design saved as template');
+    onSaveAsTemplate: (pageJson: string) => {
+      const parsed = typeof pageJson === 'string' ? JSON.parse(pageJson) : pageJson;
+      const content = JSON.stringify(parsed, null, 2);
+      this.downloadFile(`template-${Date.now()}.json`, content, 'application/json');
     },
     onSend: (htmlFile: string) => {
       console.log('onSend (User 2) called:', htmlFile);
@@ -349,6 +360,7 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
   async ngOnChanges(changes: SimpleChanges) {
     if (changes['builderType'] && !changes['builderType'].firstChange) {
       this.isExecuting.set(false);
+      this.loadedTemplate.set(null);
       this.stopCoEditing();
       await this.loadBeefreeToken(this.builderType);
     }
@@ -358,8 +370,26 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
       this.clientConfig.language = this.builderLanguage;
       this.coEditingConfig.language = this.builderLanguage;
       if (this.builderReady()) {
-        this.beefreeService.loadConfig({ language: this.builderLanguage });
+        await this.applyLanguageToAllInstances(this.builderLanguage);
       }
+    }
+  }
+
+  private async applyLanguageToAllInstances(language: string): Promise<void> {
+    const instanceIds = this.beefreeService.getInstanceIds();
+    if (!instanceIds.length) {
+      return;
+    }
+
+    const previousActiveInstance = this.beefreeService.getActiveInstanceId();
+
+    try {
+      for (const instanceId of instanceIds) {
+        this.beefreeService.setActiveInstance(instanceId);
+        await this.beefreeService.loadConfig({ language });
+      }
+    } finally {
+      this.beefreeService.setActiveInstance(previousActiveInstance);
     }
   }
 
@@ -475,24 +505,34 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
     this.executeBeefreeMethod(() => this.beefreeService.saveAsTemplate());
   }
 
+  async onLoadTemplateButton() {
+    if (this.loadedTemplate() === 'sample') {
+      await this.loadBlankTemplate();
+    } else {
+      await this.loadSampleTemplate();
+    }
+  }
+
   async loadSampleTemplate() {
     try {
       this.isExecuting.set(true);
-      const url = environment[this.builderType].templateUrl;
+      const url = environment[this.builderType].sampleTemplateUrl;
 
-      let template: IEntityContentJson;
-      if (url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to load template: ${response.status} ${response.statusText}`);
-        }
-        const json: IEntityContentJson = await response.json();
-        template = (json as unknown as { json: IEntityContentJson }).json ?? json;
-      } else {
-        template = {} as IEntityContentJson;
+      if (!url) {
+        await this.beefreeService.load({} as IEntityContentJson);
+        this.loadedTemplate.set('sample');
+        return;
       }
 
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to load template: ${response.status} ${response.statusText}`);
+      }
+      const json: IEntityContentJson = await response.json();
+      const template = (json as unknown as { json: IEntityContentJson }).json ?? json;
+
       await this.beefreeService.load(template);
+      this.loadedTemplate.set('sample');
     } catch (error) {
       console.error('Load failed:', error);
       this.onNotify?.(
@@ -505,27 +545,41 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
     }
   }
 
-  async exportTemplateJson() {
+  async loadBlankTemplate() {
     try {
       this.isExecuting.set(true);
-      const json = await this.beefreeService.getTemplateJson();
-      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `template-${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const url = environment[this.builderType].blankTemplateUrl;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to load template: ${response.status} ${response.statusText}`);
+      }
+      const json: IEntityContentJson = await response.json();
+
+      await this.beefreeService.load(json);
+      this.loadedTemplate.set('blank');
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error('Load failed:', error);
       this.onNotify?.(
         error instanceof Error ? error.message : 'Unknown error',
         'error',
-        'Export failed'
+        'Load failed'
       );
     } finally {
       this.isExecuting.set(false);
     }
+  }
+
+  private downloadFile(filename: string, content: string, contentType = 'application/json') {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   private async executeBeefreeMethod(method: () => void | Promise<unknown>) {

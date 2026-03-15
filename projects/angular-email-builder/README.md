@@ -45,20 +45,22 @@ This Angular package provides standalone builder components and a `BeefreeServic
 
 ## Compatibility
 
-| Requirement | Version |
-|-------------|---------|
-| Angular | 20+ |
-| Node.js | >= 18.0.0 |
-| TypeScript | >= 5.5 (recommended) |
-| Browsers | Chrome, Firefox, Safari, Edge (latest 2 versions) |
+| Requirement | Version                                           |
+| ----------- | ------------------------------------------------- |
+| Angular     | 20+                                               |
+| Node.js     | >= 18.0.0                                         |
+| TypeScript  | >= 5.5 (recommended)                              |
+| Browsers    | Chrome, Firefox, Safari, Edge (latest 2 versions) |
 
 ## Installation
 
 ```bash
-npm install @beefree.io/angular-email-builder @beefree.io/sdk
+npm install @beefree.io/angular-email-builder
 # or
-yarn add @beefree.io/angular-email-builder @beefree.io/sdk
+yarn add @beefree.io/angular-email-builder
 ```
+
+`@beefree.io/sdk` is included as a dependency of this package, so you do not need to install it separately.
 
 ## Quick Start
 
@@ -81,17 +83,17 @@ app.post('/api/beefree/token', async (req, res) => {
       client_secret: process.env.BEEFREE_CLIENT_SECRET,
       grant_type: 'password',
     }),
-  })
-  res.json(await response.json())
-})
+  });
+  res.json(await response.json());
+});
 ```
 
 ### 3. Integrate the builder in your Angular app
 
 ```typescript
-import { Component, OnInit, inject, signal } from '@angular/core'
-import { BeefreeBuilder, BeefreeService } from '@beefree.io/angular-email-builder'
-import type { IToken } from '@beefree.io/angular-email-builder'
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { BeefreeBuilder, BeefreeService } from '@beefree.io/angular-email-builder';
+import type { IToken } from '@beefree.io/angular-email-builder';
 
 @Component({
   selector: 'app-email-editor',
@@ -111,40 +113,41 @@ import type { IToken } from '@beefree.io/angular-email-builder'
         [width]="'100%'"
         [height]="'600px'"
         (bbSave)="onSave($event)"
-        (bbError)="onError($event)" />
+        (bbError)="onError($event)"
+      />
     }
   `,
 })
 export class EmailEditorComponent implements OnInit {
-  private beefreeService = inject(BeefreeService)
+  private beefreeService = inject(BeefreeService);
 
-  token = signal<IToken | null>(null)
+  token = signal<IToken | null>(null);
 
   builderConfig = {
     uid: 'user-123',
     container: 'bee-container',
     language: 'en-US',
-  }
+  };
 
   async ngOnInit() {
-    const res = await fetch('/api/beefree/token', { method: 'POST' })
-    this.token.set(await res.json())
+    const res = await fetch('/api/beefree/token', { method: 'POST' });
+    this.token.set(await res.json());
   }
 
   save() {
-    this.beefreeService.save()
+    this.beefreeService.save();
   }
 
   preview() {
-    this.beefreeService.preview()
+    this.beefreeService.preview();
   }
 
   onSave(event: unknown) {
-    console.log('Saved:', event)
+    console.log('Saved:', event);
   }
 
   onError(error: unknown) {
-    console.error('Builder error:', error)
+    console.error('Builder error:', error);
   }
 }
 ```
@@ -155,51 +158,51 @@ export class EmailEditorComponent implements OnInit {
 
 The library provides a single standalone component. The builder type (email, page, popup, or file manager) is determined by the SDK configuration and your application credentials, not by the component itself.
 
-| Component | Selector |
-|-----------|----------|
+| Component        | Selector              |
+| ---------------- | --------------------- |
 | `BeefreeBuilder` | `lib-beefree-builder` |
 
 ### Inputs
 
-| Input | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `token` | `IToken` | Yes | — | Authentication token from Beefree API |
-| `config` | `IBeeConfig` | No | `{ container: 'beefree-sdk-container' }` | Beefree SDK configuration object |
-| `template` | `IEntityContentJson` | No | `null` | Initial template JSON to load |
-| `width` | `string` | No | `'100%'` | Container width (CSS value) |
-| `height` | `string` | No | `'100%'` | Container height (CSS value) |
-| `shared` | `boolean` | No | `false` | Enable collaborative editing session |
-| `sessionId` | `string` | No | `null` | Session ID to join (for collaborative editing) |
-| `loaderUrl` | `string` | No | `null` | Custom Beefree SDK loader URL |
-| `bucketDir` | `string` | No | `undefined` | Custom storage bucket directory |
+| Input       | Type                 | Required | Default                                  | Description                                    |
+| ----------- | -------------------- | -------- | ---------------------------------------- | ---------------------------------------------- |
+| `token`     | `IToken`             | Yes      | —                                        | Authentication token from Beefree API          |
+| `config`    | `IBeeConfig`         | No       | `{ container: 'beefree-sdk-container' }` | Beefree SDK configuration object               |
+| `template`  | `IEntityContentJson` | No       | `null`                                   | Initial template JSON to load                  |
+| `width`     | `string`             | No       | `'100%'`                                 | Container width (CSS value)                    |
+| `height`    | `string`             | No       | `'100%'`                                 | Container height (CSS value)                   |
+| `shared`    | `boolean`            | No       | `false`                                  | Enable collaborative editing session           |
+| `sessionId` | `string`             | No       | `null`                                   | Session ID to join (for collaborative editing) |
+| `loaderUrl` | `string`             | No       | `null`                                   | Custom Beefree SDK loader URL                  |
+| `bucketDir` | `string`             | No       | `undefined`                              | Custom storage bucket directory                |
 
 ### Outputs
 
 Outputs use a `bb` (Beefree Builder) prefix to avoid collisions with native DOM events. Bind them in templates like `(bbSave)="handleSave($event)"`.
 
-| Output | Corresponds to | Description |
-|--------|---------------|-------------|
-| `bbAutoSave` | `onAutoSave` | Auto-save triggered |
-| `bbChange` | `onChange` | Content changed |
-| `bbComment` | `onComment` | Comment action |
-| `bbError` | `onError` | Error occurred |
-| `bbInfo` | `onInfo` | Informational event |
-| `bbLoad` | `onLoad` | Builder content loaded |
-| `bbLoadWorkspace` | `onLoadWorkspace` | Workspace loaded |
-| `bbPreview` | `onPreview` | Preview opened |
-| `bbPreviewChange` | `onPreviewChange` | Preview content changed |
-| `bbRemoteChange` | `onRemoteChange` | Remote change in collaborative session |
-| `bbSave` | `onSave` | Content saved |
-| `bbSaveAsTemplate` | `onSaveAsTemplate` | Content saved as template |
-| `bbSaveRow` | `onSaveRow` | Row saved |
-| `bbSend` | `onSend` | Content sent |
-| `bbSessionChange` | `onSessionChange` | Session changed |
-| `bbSessionStarted` | `onSessionStarted` | Collaborative session started |
-| `bbStart` | `onStart` | Builder started |
-| `bbTemplateLanguageChange` | `onTemplateLanguageChange` | Template language changed |
-| `bbTogglePreview` | `onTogglePreview` | Preview toggled |
-| `bbViewChange` | `onViewChange` | View changed |
-| `bbWarning` | `onWarning` | Warning event |
+| Output                     | Corresponds to             | Description                            |
+| -------------------------- | -------------------------- | -------------------------------------- |
+| `bbAutoSave`               | `onAutoSave`               | Auto-save triggered                    |
+| `bbChange`                 | `onChange`                 | Content changed                        |
+| `bbComment`                | `onComment`                | Comment action                         |
+| `bbError`                  | `onError`                  | Error occurred                         |
+| `bbInfo`                   | `onInfo`                   | Informational event                    |
+| `bbLoad`                   | `onLoad`                   | Builder content loaded                 |
+| `bbLoadWorkspace`          | `onLoadWorkspace`          | Workspace loaded                       |
+| `bbPreview`                | `onPreview`                | Preview opened                         |
+| `bbPreviewChange`          | `onPreviewChange`          | Preview content changed                |
+| `bbRemoteChange`           | `onRemoteChange`           | Remote change in collaborative session |
+| `bbSave`                   | `onSave`                   | Content saved                          |
+| `bbSaveAsTemplate`         | `onSaveAsTemplate`         | Content saved as template              |
+| `bbSaveRow`                | `onSaveRow`                | Row saved                              |
+| `bbSend`                   | `onSend`                   | Content sent                           |
+| `bbSessionChange`          | `onSessionChange`          | Session changed                        |
+| `bbSessionStarted`         | `onSessionStarted`         | Collaborative session started          |
+| `bbStart`                  | `onStart`                  | Builder started                        |
+| `bbTemplateLanguageChange` | `onTemplateLanguageChange` | Template language changed              |
+| `bbTogglePreview`          | `onTogglePreview`          | Preview toggled                        |
+| `bbViewChange`             | `onViewChange`             | View changed                           |
+| `bbWarning`                | `onWarning`                | Warning event                          |
 
 Callbacks can be provided either as `output()` event bindings or inside the `config` object. When both are provided, both are invoked.
 
@@ -219,33 +222,32 @@ Callbacks can be provided either as `output()` event bindings or inside the `con
       [height]="'700px'"
       (bbSave)="onSave($event)"
       (bbError)="onError($event)"
-      (bbLoad)="onLoad()" />
+      (bbLoad)="onLoad()"
+    />
   `,
 })
 export class EditorComponent {
-  token!: IToken
+  token!: IToken;
 
   config = {
     uid: 'user-123',
     container: 'bee-editor',
     language: 'en-US',
-    specialLinks: [
-      { type: 'unsubscribe', label: 'Unsubscribe', link: '[unsubscribe]' },
-    ],
-  }
+    specialLinks: [{ type: 'unsubscribe', label: 'Unsubscribe', link: '[unsubscribe]' }],
+  };
 
-  template = { comments: {}, page: {} }
+  template = { comments: {}, page: {} };
 
   onSave(event: unknown) {
-    console.log('Saved:', event)
+    console.log('Saved:', event);
   }
 
   onError(error: unknown) {
-    console.error('Error:', error)
+    console.error('Error:', error);
   }
 
   onLoad() {
-    console.log('Builder is ready!')
+    console.log('Builder is ready!');
   }
 }
 ```
@@ -257,8 +259,8 @@ export class EditorComponent {
 The `BeefreeService` is an Angular injectable service (`providedIn: 'root'`) that provides programmatic control over builder instances. It manages multiple builders and routes all method calls to the currently active instance.
 
 ```typescript
-import { Component, inject } from '@angular/core'
-import { BeefreeService, BeefreeBuilder } from '@beefree.io/angular-email-builder'
+import { Component, inject } from '@angular/core';
+import { BeefreeService, BeefreeBuilder } from '@beefree.io/angular-email-builder';
 
 @Component({
   selector: 'app-my-editor',
@@ -270,27 +272,23 @@ import { BeefreeService, BeefreeBuilder } from '@beefree.io/angular-email-builde
       <button (click)="preview()">Preview</button>
       <button (click)="toggleStructure()">Toggle Structure</button>
     </div>
-    <lib-beefree-builder
-      [token]="token"
-      [config]="config"
-      [width]="'100%'"
-      [height]="'600px'" />
+    <lib-beefree-builder [token]="token" [config]="config" [width]="'100%'" [height]="'600px'" />
   `,
 })
 export class MyEditorComponent {
-  private beefreeService = inject(BeefreeService)
+  private beefreeService = inject(BeefreeService);
 
   async save() {
-    const result = await this.beefreeService.save()
-    console.log('Saved:', result)
+    const result = await this.beefreeService.save();
+    console.log('Saved:', result);
   }
 
   preview() {
-    this.beefreeService.preview()
+    this.beefreeService.preview();
   }
 
   toggleStructure() {
-    this.beefreeService.toggleStructure()
+    this.beefreeService.toggleStructure();
   }
 }
 ```
@@ -299,40 +297,41 @@ export class MyEditorComponent {
 
 ```typescript
 // Template operations
-await beefreeService.save()                     // Trigger onSave callback
-await beefreeService.saveAsTemplate()           // Trigger onSaveAsTemplate callback
-beefreeService.send()                           // Trigger onSend callback
-beefreeService.load(templateJson)               // Load new template
-beefreeService.reload(templateJson)             // Reload with loading dialog
-const json = await beefreeService.getTemplateJson() // Get current template JSON
+await beefreeService.save(); // Trigger onSave callback
+await beefreeService.saveAsTemplate(); // Trigger onSaveAsTemplate callback
+beefreeService.send(); // Trigger onSend callback
+beefreeService.load(templateJson); // Load new template
+beefreeService.reload(templateJson); // Reload with loading dialog
+const json = await beefreeService.getTemplateJson(); // Get current template JSON
 
 // UI controls
-beefreeService.preview()                        // Open preview modal
-beefreeService.togglePreview()                  // Toggle preview mode
-beefreeService.toggleStructure()                // Toggle structure helper
-beefreeService.toggleComments()                 // Toggle comments panel
-beefreeService.toggleMergeTagsPreview()         // Toggle merge tags preview
-beefreeService.showComment(comment)             // Show specific comment
-beefreeService.switchPreview(language)           // Switch preview language
+beefreeService.preview(); // Open preview modal
+beefreeService.togglePreview(); // Toggle preview mode
+beefreeService.toggleStructure(); // Toggle structure helper
+beefreeService.toggleComments(); // Toggle comments panel
+beefreeService.toggleMergeTagsPreview(); // Toggle merge tags preview
+beefreeService.showComment(comment); // Show specific comment
+beefreeService.switchPreview(language); // Switch preview language
 
 // Configuration
-await beefreeService.loadConfig(config)         // Update full configuration
-await beefreeService.updateConfig(partialConfig)// Partial config update
-const config = beefreeService.getConfig()       // Get current config
-beefreeService.loadWorkspace('default')          // Load workspace type
-beefreeService.loadStageMode({                  // Set stage mode
+await beefreeService.loadConfig(config); // Update full configuration
+await beefreeService.updateConfig(partialConfig); // Partial config update
+const config = beefreeService.getConfig(); // Get current config
+beefreeService.loadWorkspace('default'); // Load workspace type
+beefreeService.loadStageMode({
+  // Set stage mode
   mode: 'desktop',
   display: 'blur',
-})
-beefreeService.loadRows()                       // Load rows
-beefreeService.switchTemplateLanguage(language)  // Switch template language
+});
+beefreeService.loadRows(); // Load rows
+beefreeService.switchTemplateLanguage(language); // Switch template language
 
 // Advanced
-beefreeService.updateToken(tokenArgs)           // Update access token
-beefreeService.execCommand(command, options)     // Execute builder command
-await beefreeService.join(config, sessionId)     // Join collaborative session
-await beefreeService.start(config, template)     // Start builder programmatically
-await beefreeService.startFileManager(config)    // Start file manager
+beefreeService.updateToken(tokenArgs); // Update access token
+beefreeService.execCommand(command, options); // Execute builder command
+await beefreeService.join(config, sessionId); // Join collaborative session
+await beefreeService.start(config, template); // Start builder programmatically
+await beefreeService.startFileManager(config); // Start file manager
 ```
 
 ### Instance Management
@@ -341,18 +340,18 @@ When you have multiple builder components, the service automatically manages the
 
 ```typescript
 // Get all instance IDs
-const ids = beefreeService.getInstanceIds()
+const ids = beefreeService.getInstanceIds();
 
 // Set a specific instance as active
-beefreeService.setActiveInstance('my-container-id')
+beefreeService.setActiveInstance('my-container-id');
 
 // Check if an instance exists
-beefreeService.hasInstance('my-container-id')
+beefreeService.hasInstance('my-container-id');
 
 // Subscribe to active instance changes (RxJS Observable)
 beefreeService.activeInstance$.subscribe((instanceId) => {
-  console.log('Active instance:', instanceId)
-})
+  console.log('Active instance:', instanceId);
+});
 ```
 
 ## Best Practices
@@ -368,10 +367,10 @@ beefreeService.activeInstance$.subscribe((instanceId) => {
 const token = await fetch('https://auth.getbee.io/loginV2', {
   method: 'POST',
   body: JSON.stringify({
-    client_id: 'your-client-id',      // Exposed!
-    client_secret: 'your-secret',      // Exposed!
+    client_id: 'your-client-id', // Exposed!
+    client_secret: 'your-secret', // Exposed!
   }),
-})
+});
 ```
 
 **Good (secure):**
@@ -389,11 +388,11 @@ app.post('/api/beefree/token', async (req, res) => {
       client_secret: process.env.BEEFREE_CLIENT_SECRET,
       uid: req.user.id,
     }),
-  })
+  });
 
-  const token = await response.json()
-  res.json(token)
-})
+  const token = await response.json();
+  res.json(token);
+});
 ```
 
 2. **Angular service:**
@@ -402,10 +401,10 @@ app.post('/api/beefree/token', async (req, res) => {
 // frontend: beefree-token.service.ts
 @Injectable({ providedIn: 'root' })
 export class BeefreeTokenService {
-  private http = inject(HttpClient)
+  private http = inject(HttpClient);
 
   getToken(): Observable<IToken> {
-    return this.http.post<IToken>('/api/beefree/token', {})
+    return this.http.post<IToken>('/api/beefree/token', {});
   }
 }
 ```
@@ -415,8 +414,8 @@ export class BeefreeTokenService {
 When using multiple builders on the same page, ensure each has a unique `container` in its config:
 
 ```typescript
-config1 = { uid: 'user-1', container: 'builder-1' }
-config2 = { uid: 'user-1', container: 'builder-2' }
+config1 = { uid: 'user-1', container: 'builder-1' };
+config2 = { uid: 'user-1', container: 'builder-2' };
 ```
 
 ### 🔄 Collaborative Editing
@@ -434,7 +433,8 @@ For collaborative sessions, share the `sessionId` between users:
       [token]="hostToken"
       [config]="hostConfig"
       [shared]="true"
-      (bbSessionStarted)="onSessionStarted($event)" />
+      (bbSessionStarted)="onSessionStarted($event)"
+    />
 
     <!-- Guest joins with sessionId -->
     @if (sessionId()) {
@@ -442,16 +442,17 @@ For collaborative sessions, share the `sessionId` between users:
         [token]="guestToken"
         [config]="guestConfig"
         [shared]="true"
-        [sessionId]="sessionId()" />
+        [sessionId]="sessionId()"
+      />
     }
   `,
 })
 export class CollabEditorComponent {
-  sessionId = signal<string | null>(null)
+  sessionId = signal<string | null>(null);
 
   onSessionStarted(event: unknown) {
-    const { sessionId } = event as { sessionId: string }
-    this.sessionId.set(sessionId)
+    const { sessionId } = event as { sessionId: string };
+    this.sessionId.set(sessionId);
   }
 }
 ```
@@ -468,18 +469,18 @@ config = {
     saveRow: {
       label: 'Save to Library',
       handler: async (resolve: (value: { name: string }) => void) => {
-        const rowName = await showCustomDialog()
-        resolve({ name: rowName })
+        const rowName = await showCustomDialog();
+        resolve({ name: rowName });
       },
     },
     addOn: {
       handler: async (resolve: (content: unknown) => void) => {
-        const content = await fetchCustomContent()
-        resolve(content)
+        const content = await fetchCustomContent();
+        resolve(content);
       },
     },
   },
-}
+};
 ```
 
 ### External Content Sources
@@ -501,15 +502,15 @@ config = {
     getRows: {
       handler: async (resolve: Function, reject: Function, args: { handle: string }) => {
         if (args.handle === 'saved-rows') {
-          const rows = await fetchSavedRows()
-          resolve(rows)
+          const rows = await fetchSavedRows();
+          resolve(rows);
         } else {
-          reject('Handle not found')
+          reject('Handle not found');
         }
       },
     },
   },
-}
+};
 ```
 
 ### Merge Tags
@@ -524,12 +525,12 @@ config = {
         const mentions = [
           { username: 'FirstName', value: '{{firstName}}', uid: 'fn' },
           { username: 'LastName', value: '{{lastName}}', uid: 'ln' },
-        ]
-        resolve(mentions)
+        ];
+        resolve(mentions);
       },
     },
   },
-}
+};
 ```
 
 ## Examples
@@ -538,8 +539,10 @@ The demo application in this repository demonstrates:
 
 - Token authentication flow
 - Collaborative editing with split-panel UI
-- Save, preview, and export functionality
-- Multi-language UI switching
+- Save (HTML download) and Save as Template (JSON download)
+- Preview toggle
+- Load Sample Template / Load Blank Template toggle
+- Multi-language UI switching (header, buttons, and SDK)
 - Multiple builder types (Email, Page, Popup, File Manager)
 
 **Quick start:**
@@ -600,11 +603,11 @@ The `BeefreeBuilder` component handles all builder types — email, page, popup,
 
 This repository is an Angular CLI workspace with the library and a demo app side by side:
 
-| Path | Description |
-|------|-------------|
-| `projects/angular-email-builder/` | Library source code |
-| `src/` | Demo/example application |
-| `dist/angular-email-builder/` | Built library output (git-ignored) |
+| Path                              | Description                        |
+| --------------------------------- | ---------------------------------- |
+| `projects/angular-email-builder/` | Library source code                |
+| `src/`                            | Demo/example application           |
+| `dist/angular-email-builder/`     | Built library output (git-ignored) |
 
 The demo app imports from `@beefree.io/angular-email-builder` — the same package name end-users will use. A `paths` mapping in `tsconfig.json` redirects this import to `./dist/angular-email-builder` locally, so the example app consumes the library exactly as a real consumer would.
 
@@ -666,6 +669,7 @@ Make sure each builder has a unique `container` value in its config. The `Beefre
 ## Support
 
 For issues related to:
+
 - **This Angular wrapper**: Open an issue on [this repository](https://github.com/BeefreeSDK/angular-email-builder)
 - **Beefree SDK**: Visit [Beefree Developer Documentation](https://docs.beefree.io/)
 - **Account/billing**: Contact [Beefree Support](https://www.beefree.io/support/)
@@ -674,9 +678,9 @@ For issues related to:
 
 Beefree SDK wrappers are available for the following frameworks:
 
-| Framework | Package | Repository |
-|-----------|---------|------------|
-| React | `@beefree.io/react-email-builder` | [BeefreeSDK/react-email-builder](https://github.com/BeefreeSDK/react-email-builder) |
+| Framework | Package                           | Repository                                                                          |
+| --------- | --------------------------------- | ----------------------------------------------------------------------------------- |
+| React     | `@beefree.io/react-email-builder` | [BeefreeSDK/react-email-builder](https://github.com/BeefreeSDK/react-email-builder) |
 
 ## Resources
 
