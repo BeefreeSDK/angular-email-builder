@@ -7,7 +7,7 @@
 
 An Angular wrapper library for the [Beefree SDK](https://www.beefree.io/), providing standalone components and an injectable service to embed the Beefree email/page/popup builder into your Angular applications.
 
-![Beefree SDK Angular Builder — collaborative editing demo](../../docs/angular-email-builder-example.png)
+![Beefree SDK Angular Builder — collaborative editing demo](https://raw.githubusercontent.com/BeefreeSDK/angular-email-builder/main/docs/angular-email-builder-example.png)
 
 ## Table of Contents
 
