@@ -175,31 +175,7 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
 
   builderHeight = computed(() => 'calc(100vh - 128px)');
 
-  defaultContentLanguage = { label: 'en-US', value: 'en-US' };
-
-  additionalContentLanguages = [
-    { label: 'it-IT', value: 'it-IT' },
-    { label: 'es-ES', value: 'es-ES' },
-    { label: 'fr-FR', value: 'fr-FR' },
-    { label: 'de-DE', value: 'de-DE' },
-    { label: 'pt-BR', value: 'pt-BR' },
-    { label: 'id-ID', value: 'id-ID' },
-    { label: 'ja-JP', value: 'ja-JP' },
-    { label: 'zh-CN', value: 'zh-CN' },
-    { label: 'zh-HK', value: 'zh-HK' },
-    { label: 'cs-CZ', value: 'cs-CZ' },
-    { label: 'nb-NO', value: 'nb-NO' },
-    { label: 'da-DK', value: 'da-DK' },
-    { label: 'sv-SE', value: 'sv-SE' },
-    { label: 'pl-PL', value: 'pl-PL' },
-    { label: 'hu-HU', value: 'hu-HU' },
-    { label: 'ru-RU', value: 'ru-RU' },
-    { label: 'ko-KR', value: 'ko-KR' },
-    { label: 'nl-NL', value: 'nl-NL' },
-    { label: 'fi-FI', value: 'fi-FI' },
-    { label: 'ro-RO', value: 'ro-RO' },
-    { label: 'sl-SI', value: 'sl-SI' },
-  ];
+  // ...existing code...
 
   private i18nMap: Record<string, typeof i18nEnUS> = {
     'en-US': i18nEnUS,
@@ -268,8 +244,7 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
     username: 'User 1',
     userColor: '#00aced',
     userHandle: 'user1',
-    templateLanguage: this.defaultContentLanguage,
-    templateLanguages: this.additionalContentLanguages,
+    // ...existing code...
     onSave: (_pageJson: string, pageHtml: string) => {
       this.downloadFile(`design-${Date.now()}.html`, pageHtml, 'text/html;charset=utf-8');
     },
@@ -292,8 +267,7 @@ export class BeefreeExampleComponent implements OnInit, OnChanges {
     username: 'User 2',
     userColor: '#000000',
     userHandle: 'user2',
-    templateLanguage: this.defaultContentLanguage,
-    templateLanguages: this.additionalContentLanguages,
+    // ...existing code...
     onSave: (_pageJson: string, pageHtml: string) => {
       this.downloadFile(`design-${Date.now()}.html`, pageHtml, 'text/html;charset=utf-8');
     },
