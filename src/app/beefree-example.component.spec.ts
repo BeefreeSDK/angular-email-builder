@@ -21,6 +21,8 @@ function createMockBeefreeService() {
     load: vi.fn().mockResolvedValue(undefined),
     getTemplateJson: vi.fn().mockResolvedValue({ data: { json: {} } }),
     loadConfig: vi.fn(),
+    getInstanceIds: vi.fn().mockReturnValue(['beefree-sdk-builder-1', 'beefree-sdk-builder-2']),
+    getActiveInstanceId: vi.fn().mockReturnValue('beefree-sdk-builder-1'),
     setActiveInstance: vi.fn(),
     registerInstance: vi.fn(),
     unregisterInstance: vi.fn(),
@@ -171,7 +173,7 @@ describe('BeefreeExampleComponent', () => {
     expect(mockTokenService.getBuilderToken).not.toHaveBeenCalled()
   })
 
-  it('should update language and call loadConfig on language change', async () => {
+  it('should update language and call loadConfig for all instances on language change', async () => {
     await component.ngOnInit()
     component.builderLanguage = 'it-IT'
 
@@ -179,7 +181,24 @@ describe('BeefreeExampleComponent', () => {
       builderLanguage: new SimpleChange('en-US', 'it-IT', false),
     })
 
+    expect(mockBeefreeService.loadConfig).toHaveBeenCalledTimes(2)
     expect(mockBeefreeService.loadConfig).toHaveBeenCalledWith({ language: 'it-IT' })
+    expect(mockBeefreeService.setActiveInstance).toHaveBeenNthCalledWith(1, 'beefree-sdk-builder-1')
+    expect(mockBeefreeService.setActiveInstance).toHaveBeenNthCalledWith(2, 'beefree-sdk-builder-2')
+    expect(mockBeefreeService.setActiveInstance).toHaveBeenNthCalledWith(3, 'beefree-sdk-builder-1')
+  })
+
+  it('should skip language application when no instances are registered', async () => {
+    await component.ngOnInit()
+    component.builderLanguage = 'it-IT'
+    mockBeefreeService.getInstanceIds.mockReturnValue([])
+
+    await component.ngOnChanges({
+      builderLanguage: new SimpleChange('en-US', 'it-IT', false),
+    })
+
+    expect(mockBeefreeService.loadConfig).not.toHaveBeenCalled()
+    expect(mockBeefreeService.setActiveInstance).not.toHaveBeenCalled()
   })
 
   it('should not call loadConfig on first language change', async () => {
@@ -249,18 +268,25 @@ describe('BeefreeExampleComponent', () => {
 
   // --- loadSampleTemplate ---
 
-  it('should load blank template when templateUrl is empty', async () => {
+  it('should load empty object when sampleTemplateUrl is empty', async () => {
+    const { environment } = await import('../environments/environment')
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = ''
+
     await component.loadSampleTemplate()
 
     expect(fetchSpy).not.toHaveBeenCalled()
     expect(mockBeefreeService.load).toHaveBeenCalledWith({})
+    expect(component.loadedTemplate()).toBe('sample')
     expect(component.isExecuting()).toBe(false)
+
+    environment.emailBuilder.sampleTemplateUrl = origUrl
   })
 
   it('should load sample template successfully when url is set', async () => {
     const { environment } = await import('../environments/environment')
-    const origUrl = environment.emailBuilder.templateUrl
-    environment.emailBuilder.templateUrl = 'https://example.com/template.json'
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = 'https://example.com/template.json'
 
     const templateJson = { page: { rows: [] } }
     fetchSpy.mockResolvedValue(
@@ -270,14 +296,15 @@ describe('BeefreeExampleComponent', () => {
     await component.loadSampleTemplate()
 
     expect(mockBeefreeService.load).toHaveBeenCalledWith(templateJson)
+    expect(component.loadedTemplate()).toBe('sample')
     expect(component.isExecuting()).toBe(false)
-    environment.emailBuilder.templateUrl = origUrl
+    environment.emailBuilder.sampleTemplateUrl = origUrl
   })
 
   it('should fall back to raw json when no wrapper', async () => {
     const { environment } = await import('../environments/environment')
-    const origUrl = environment.emailBuilder.templateUrl
-    environment.emailBuilder.templateUrl = 'https://example.com/template.json'
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = 'https://example.com/template.json'
 
     const rawJson = { page: { rows: [] } }
     fetchSpy.mockResolvedValue(
@@ -287,13 +314,13 @@ describe('BeefreeExampleComponent', () => {
     await component.loadSampleTemplate()
 
     expect(mockBeefreeService.load).toHaveBeenCalledWith(rawJson)
-    environment.emailBuilder.templateUrl = origUrl
+    environment.emailBuilder.sampleTemplateUrl = origUrl
   })
 
   it('should handle fetch failure in loadSampleTemplate', async () => {
     const { environment } = await import('../environments/environment')
-    const origUrl = environment.emailBuilder.templateUrl
-    environment.emailBuilder.templateUrl = 'https://example.com/template.json'
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = 'https://example.com/template.json'
 
     const notifySpy = vi.fn()
     component.onNotify = notifySpy
@@ -306,13 +333,13 @@ describe('BeefreeExampleComponent', () => {
       'error',
       'Load failed',
     )
-    environment.emailBuilder.templateUrl = origUrl
+    environment.emailBuilder.sampleTemplateUrl = origUrl
   })
 
   it('should handle network error in loadSampleTemplate', async () => {
     const { environment } = await import('../environments/environment')
-    const origUrl = environment.emailBuilder.templateUrl
-    environment.emailBuilder.templateUrl = 'https://example.com/template.json'
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = 'https://example.com/template.json'
 
     const notifySpy = vi.fn()
     component.onNotify = notifySpy
@@ -321,13 +348,13 @@ describe('BeefreeExampleComponent', () => {
     await component.loadSampleTemplate()
 
     expect(notifySpy).toHaveBeenCalledWith('Network error', 'error', 'Load failed')
-    environment.emailBuilder.templateUrl = origUrl
+    environment.emailBuilder.sampleTemplateUrl = origUrl
   })
 
   it('should handle non-Error in loadSampleTemplate', async () => {
     const { environment } = await import('../environments/environment')
-    const origUrl = environment.emailBuilder.templateUrl
-    environment.emailBuilder.templateUrl = 'https://example.com/template.json'
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = 'https://example.com/template.json'
 
     const notifySpy = vi.fn()
     component.onNotify = notifySpy
@@ -336,58 +363,95 @@ describe('BeefreeExampleComponent', () => {
     await component.loadSampleTemplate()
 
     expect(notifySpy).toHaveBeenCalledWith('Unknown error', 'error', 'Load failed')
-    environment.emailBuilder.templateUrl = origUrl
+    environment.emailBuilder.sampleTemplateUrl = origUrl
   })
 
-  // --- exportTemplateJson ---
+  // --- loadBlankTemplate ---
 
-  it('should export template as JSON download', async () => {
-    const mockUrl = 'blob:http://localhost/abc'
-    const origCreateObjectURL = URL.createObjectURL
-    const origRevokeObjectURL = URL.revokeObjectURL
-    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
-    URL.revokeObjectURL = vi.fn()
+  it('should load blank template from URL', async () => {
+    const blankJson = { page: { rows: [] } }
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify(blankJson), { status: 200 }),
+    )
 
-    const clickSpy = vi.fn()
-    const origCreateElement = document.createElement.bind(document)
-    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-      if (tag === 'a') {
-        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
-      }
-      return origCreateElement(tag)
-    })
+    await component.loadBlankTemplate()
 
-    mockBeefreeService.getTemplateJson.mockResolvedValue({ page: {} })
-
-    await component.exportTemplateJson()
-
-    expect(URL.createObjectURL).toHaveBeenCalled()
-    expect(clickSpy).toHaveBeenCalled()
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+    expect(mockBeefreeService.load).toHaveBeenCalledWith(blankJson)
+    expect(component.loadedTemplate()).toBe('blank')
     expect(component.isExecuting()).toBe(false)
-
-    URL.createObjectURL = origCreateObjectURL
-    URL.revokeObjectURL = origRevokeObjectURL
   })
 
-  it('should handle error in exportTemplateJson', async () => {
+  it('should handle fetch failure in loadBlankTemplate', async () => {
     const notifySpy = vi.fn()
     component.onNotify = notifySpy
-    mockBeefreeService.getTemplateJson.mockRejectedValue(new Error('export-fail'))
+    fetchSpy.mockResolvedValue(new Response('', { status: 404, statusText: 'Not Found' }))
 
-    await component.exportTemplateJson()
+    await component.loadBlankTemplate()
 
-    expect(notifySpy).toHaveBeenCalledWith('export-fail', 'error', 'Export failed')
+    expect(notifySpy).toHaveBeenCalledWith(
+      expect.stringContaining('404'),
+      'error',
+      'Load failed',
+    )
   })
 
-  it('should handle non-Error in exportTemplateJson', async () => {
+  it('should handle network error in loadBlankTemplate', async () => {
     const notifySpy = vi.fn()
     component.onNotify = notifySpy
-    mockBeefreeService.getTemplateJson.mockRejectedValue(42)
+    fetchSpy.mockRejectedValue(new Error('Blank error'))
 
-    await component.exportTemplateJson()
+    await component.loadBlankTemplate()
 
-    expect(notifySpy).toHaveBeenCalledWith('Unknown error', 'error', 'Export failed')
+    expect(notifySpy).toHaveBeenCalledWith('Blank error', 'error', 'Load failed')
+  })
+
+  it('should handle non-Error in loadBlankTemplate', async () => {
+    const notifySpy = vi.fn()
+    component.onNotify = notifySpy
+    fetchSpy.mockRejectedValue('blank-err')
+
+    await component.loadBlankTemplate()
+
+    expect(notifySpy).toHaveBeenCalledWith('Unknown error', 'error', 'Load failed')
+  })
+
+  // --- onLoadTemplateButton ---
+
+  it('should call loadSampleTemplate when loadedTemplate is not sample', async () => {
+    const { environment } = await import('../environments/environment')
+    const origUrl = environment.emailBuilder.sampleTemplateUrl
+    environment.emailBuilder.sampleTemplateUrl = ''
+
+    await component.onLoadTemplateButton()
+
+    expect(mockBeefreeService.load).toHaveBeenCalledWith({})
+    expect(component.loadedTemplate()).toBe('sample')
+    environment.emailBuilder.sampleTemplateUrl = origUrl
+  })
+
+  it('should call loadBlankTemplate when loadedTemplate is sample', async () => {
+    component.loadedTemplate.set('sample')
+    const blankJson = { page: { rows: [] } }
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify(blankJson), { status: 200 }),
+    )
+
+    await component.onLoadTemplateButton()
+
+    expect(fetchSpy).toHaveBeenCalled()
+    expect(mockBeefreeService.load).toHaveBeenCalledWith(blankJson)
+    expect(component.loadedTemplate()).toBe('blank')
+  })
+
+  // --- loadTemplateButtonLabel ---
+
+  it('should show Load Sample Template label by default', () => {
+    expect(component.loadTemplateButtonLabel()).toBe('Load Sample Template')
+  })
+
+  it('should show Load Blank Template label when sample is loaded', () => {
+    component.loadedTemplate.set('sample')
+    expect(component.loadTemplateButtonLabel()).toBe('Load Blank Template')
   })
 
   // --- setActiveInstance ---
@@ -566,24 +630,94 @@ describe('BeefreeExampleComponent', () => {
 
   // --- Config callbacks ---
 
-  it('should call onNotify via clientConfig.onSave', () => {
-    const notifySpy = vi.fn()
-    component.onNotify = notifySpy
+  it('should download HTML via clientConfig.onSave', () => {
+    const mockUrl = 'blob:http://localhost/abc'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
 
-    component.clientConfig.onSave('json', 'html', null, 1, null)
-    expect(notifySpy).toHaveBeenCalledWith(
-      'Check console for details.', 'success', 'Design saved',
-    )
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    component.clientConfig.onSave('json', '<html>test</html>', null, 1, null)
+
+    expect(URL.createObjectURL).toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
   })
 
-  it('should call onNotify via clientConfig.onSaveAsTemplate', () => {
-    const notifySpy = vi.fn()
-    component.onNotify = notifySpy
+  it('should download JSON via clientConfig.onSaveAsTemplate', () => {
+    const mockUrl = 'blob:http://localhost/abc'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
 
-    component.clientConfig.onSaveAsTemplate('json', 1)
-    expect(notifySpy).toHaveBeenCalledWith(
-      'Check console for details.', 'success', 'Design saved as template',
-    )
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    component.clientConfig.onSaveAsTemplate('{"page":{}}', 1)
+
+    expect(URL.createObjectURL).toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
+  })
+
+  it('should download JSON object via clientConfig.onSaveAsTemplate', () => {
+    const mockUrl = 'blob:http://localhost/abc'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
+
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    component.clientConfig.onSaveAsTemplate({ page: {} } as never, 1)
+
+    expect(URL.createObjectURL).toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
   })
 
   it('should call onNotify via clientConfig.onSend', () => {
@@ -612,24 +746,91 @@ describe('BeefreeExampleComponent', () => {
     expect(notifySpy).toHaveBeenCalledWith(expect.stringContaining('{'), 'error', 'Error')
   })
 
-  it('should call onNotify via coEditingConfig.onSave', () => {
-    const notifySpy = vi.fn()
-    component.onNotify = notifySpy
+  it('should download HTML via coEditingConfig.onSave', () => {
+    const mockUrl = 'blob:http://localhost/abc'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
 
-    component.coEditingConfig.onSave('json', 'html', null, 1, null)
-    expect(notifySpy).toHaveBeenCalledWith(
-      'Check console for details.', 'success', 'Design saved',
-    )
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    component.coEditingConfig.onSave('json', '<html></html>', null, 1, null)
+
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
   })
 
-  it('should call onNotify via coEditingConfig.onSaveAsTemplate', () => {
-    const notifySpy = vi.fn()
-    component.onNotify = notifySpy
+  it('should download JSON via coEditingConfig.onSaveAsTemplate', () => {
+    const mockUrl = 'blob:http://localhost/abc'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
 
-    component.coEditingConfig.onSaveAsTemplate('json', 1)
-    expect(notifySpy).toHaveBeenCalledWith(
-      'Check console for details.', 'success', 'Design saved as template',
-    )
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    component.coEditingConfig.onSaveAsTemplate('{"page":{}}', 1)
+
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
+  })
+
+  it('should download JSON object via coEditingConfig.onSaveAsTemplate', () => {
+    const mockUrl = 'blob:http://localhost/abc'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
+
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    component.coEditingConfig.onSaveAsTemplate({ page: {} } as never, 1)
+
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
   })
 
   it('should call onNotify via coEditingConfig.onSend', () => {
@@ -698,6 +899,17 @@ describe('BeefreeExampleComponent', () => {
     expect(component.sessionId()).toBeNull()
   })
 
+  it('should reset loadedTemplate when builderType changes', async () => {
+    await component.ngOnInit()
+    component.loadedTemplate.set('sample')
+
+    await component.ngOnChanges({
+      builderType: new SimpleChange('emailBuilder', 'pageBuilder', false),
+    })
+
+    expect(component.loadedTemplate()).toBeNull()
+  })
+
   it('should reset isExecuting when builderType changes', async () => {
     await component.ngOnInit()
     component.isExecuting.set(true)
@@ -717,6 +929,70 @@ describe('BeefreeExampleComponent', () => {
     const i18n = component.i18n()
     expect(i18n).toBeTruthy()
     expect(i18n.title).toBeDefined()
+  })
+
+  it('should provide appStrings', () => {
+    const appStrings = component.appStrings()
+    expect(appStrings.builderLabel).toBe('Builder:')
+    expect(appStrings.builderTypes.emailBuilder).toBe('Email Builder')
+  })
+
+  it('should fall back to en-US appStrings when language is unknown', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(component as any).selectedBuilderLanguage.set('xx-XX')
+    expect(component.appStrings().builderLabel).toBe('Builder:')
+  })
+
+  it('should provide exampleStrings', () => {
+    const exampleStrings = component.exampleStrings()
+    expect(exampleStrings.save).toBe('Save')
+    expect(exampleStrings.preview).toBe('Preview')
+    expect(exampleStrings.loadSampleTemplate).toBe('Load Sample Template')
+    expect(exampleStrings.loadBlankTemplate).toBe('Load Blank Template')
+  })
+
+  it('should fall back to en-US exampleStrings when language is unknown', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(component as any).selectedBuilderLanguage.set('xx-XX')
+    expect(component.exampleStrings().save).toBe('Save')
+  })
+
+  it('should use default content type when downloadFile is called without one', () => {
+    const mockUrl = 'blob:http://localhost/default-type'
+    const origCreateObjectURL = URL.createObjectURL
+    const origRevokeObjectURL = URL.revokeObjectURL
+    URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+    URL.revokeObjectURL = vi.fn()
+
+    const clickSpy = vi.fn()
+    const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node)
+    const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'a') {
+        return { href: '', download: '', click: clickSpy } as unknown as HTMLAnchorElement
+      }
+      return origCreateElement(tag)
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(component as any).downloadFile('template.json', '{"a":1}')
+
+    expect(URL.createObjectURL).toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(mockUrl)
+
+    appendSpy.mockRestore()
+    removeSpy.mockRestore()
+    URL.createObjectURL = origCreateObjectURL
+    URL.revokeObjectURL = origRevokeObjectURL
+  })
+
+  it('should switch i18n strings when language changes', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(component as any).selectedBuilderLanguage.set('it-IT')
+    expect(component.exampleStrings().save).toBe('Salva')
+    expect(component.appStrings().coEditing).toBe('Co-editing')
   })
 
   it('should skip getTemplateJson when builder is not ready during toggleCoEditing', async () => {
