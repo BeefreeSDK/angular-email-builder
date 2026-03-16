@@ -15,12 +15,13 @@
     "test:example": "ng test angular-email-builder-example",
     "coverage": "ng test angular-email-builder --coverage",
     "coverage:example": "ng test angular-email-builder-example --coverage",
+    "guard:main-branch": "test \"$(git rev-parse --abbrev-ref HEAD)\" = \"main\" || (echo 'Error: releases must be published from the main branch.' && exit 1)",
     "prerelease": "git pull && yarn prebuild && yarn test:ci && yarn build",
-    "release": "standard-version",
-    "postrelease": "git push --follow-tags --no-verify",
-    "release:alpha": "yarn prerelease && standard-version --prerelease alpha && yarn postrelease",
-    "release:beta": "yarn prerelease && standard-version --prerelease beta && yarn postrelease",
-    "release:unstable": "yarn prerelease && standard-version --prerelease $(git branch --show-current | sed 's/\\//-/g') && yarn postrelease"
+    "release": "yarn guard:main-branch && yarn prerelease && standard-version && git push --follow-tags --no-verify",
+    "release:alpha": "yarn prerelease && standard-version --prerelease alpha && git push --follow-tags --no-verify",
+    "release:beta": "yarn prerelease && standard-version --prerelease beta && git push --follow-tags --no-verify",
+    "release:unstable": "yarn prerelease && standard-version --prerelease unstable && git push --follow-tags --no-verify",
+    "publish:npm": "yarn guard:main-branch && yarn build && npm publish ./dist/angular-email-builder --access public"
   },
   "prettier": {
     "printWidth": 100,
