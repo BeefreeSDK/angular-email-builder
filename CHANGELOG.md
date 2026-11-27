@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.4](https://github.com/BeefreeSDK/angular-email-builder/compare/v1.1.4-beta.0...v1.1.4) (2026-11-27)
+
+
+### Security
+
+* **BEE-12977:** harden npm package publishing: releases are now published from GitHub Actions via npm trusted publishing (OIDC) with signed provenance attestations, replacing the long-lived npm token ([936f2d8](https://github.com/BeefreeSDK/angular-email-builder/commit/936f2d889a3d8f31f3640d331dfc292a718f564c))
+
 ### [1.1.4-beta.0](https://github.com/BeefreeSDK/angular-email-builder/compare/v1.1.3...v1.1.4-beta.0) (2026-11-27)
 
 ### [1.1.3](https://github.com/BeefreeSDK/angular-email-builder/compare/v1.1.1...v1.1.3) (2026-03-16)
