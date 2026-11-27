@@ -134,6 +134,9 @@ jobs:
     needs: build
     environment:
       name: release
+    permissions:
+      contents: read
+      id-token: write # required for npm trusted publishing (OIDC)
     steps:
       - uses: actions/checkout@v4.2.2
         with:
@@ -150,13 +153,16 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Use Node.js 22.x
+      - name: Use Node.js 24.x
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
           scope: '@beefree.io'
           cache: 'yarn'
+
+      - name: Ensure npm >= 11.5.1 (required for trusted publishing)
+        run: npm install -g npm@latest
 
       - name: Install Dependencies
         run: yarn --immutable
@@ -173,6 +179,10 @@ jobs:
           echo "All build artifacts verified."
 
       - name: Publish to npm
-        run: npm publish ./dist/angular-email-builder --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Prerelease versions (any tag with a "-", e.g. v1.2.0-beta.0) go to "unstable", never "latest"
+          if [[ "${{ github.ref_name }}" == *-* ]]; then
+            npm publish ./dist/angular-email-builder --access public --tag unstable
+          else
+            npm publish ./dist/angular-email-builder --access public
+          fi
